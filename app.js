@@ -51,6 +51,8 @@ var luisAPIHostName = process.env.LuisAPIHostName || 'westus.api.cognitive.micro
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 bot.recognizer(recognizer);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] })
+bot.dialog('/', intents);    
+
 
     //Completed/Tested Intents Here 
 
@@ -70,6 +72,15 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
         session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me', session.message.text);
     })
 
+        .matches('getInfo', (session) => {
+            session.send('What Info?', session.message.text);
+        })
+
+bot.dialog('Help', function (session) => {
+    session.endDialog('Hi! Try asking me things like \'What time do you open?\', \'What offers is great clips running?\' or \'What is the price of a haircut\'', session.message.text);
+}).triggerAction({
+    matches: 'Help'
+});
 
     .matches('getInformation', (session, args) => {
         session.send('What info wold you like? Price, Timing, or Contact Info?', session.message.text);
@@ -77,10 +88,6 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
             var ChildEntity = builder.EntityRecognizer.findEntity(args.entities, 'Child');
             var MenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Men');
             var WomenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Women');
-        var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
-        var PhoneNumberEntity = builder.EntityRecognizer.findEntity(args.entities, 'PhoneNumber');
-        var TimeOpenEntity = builder.EntityRecognizer.findEntity(args.entities, 'TimeOpen');
-
         if (PriceEntity) {
             session.send('For a man, woman, or child?', session.message.text); 
             if (childEntity) {
@@ -91,15 +98,55 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
                 })
                     if (mensEntity) {
                         session.send('The price for a Childs haircut is 10$', session.message.text);
-                    })
+                        })
+            else{
+                session.send('What else would you like to know?', session.message.text);
+            })
+        ).triggerAction({
+            matches: 'getInformation.Price'
+        })
+
+
+            .matches('getInformation', (session, args) => {
+                var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
+        var PhoneNumberEntity = builder.EntityRecognizer.findEntity(args.entities, 'PhoneNumber');
+        var TimeOpenEntity = builder.EntityRecognizer.findEntity(args.entities, 'TimeOpen');
         if (timingEntity) {
             session.send('We are Open from 6:30 AM to 8:30 PM', session.message.text);
-                    })
-        if (timeOpenEntity) {
-            session.send('The price for a Womans haircut is 12$', session.message.text);
-               
         })
-  
+        if (timeOpenEntity) {
+            session.send('We open at 6:30', session.message.text);
+
+        })
+        if (PhoneNumberEntity) {
+            session.send('Our Phone number is 936-787-6986', session.message.text);
+        })
+
+//Appointment Details - waterfalled for input - Code is correct - need to work on getting functionality with memory - find hhow to test 
+.matches('manageAppointment', (session, args, next)=> {
+            session.send('Welcome to the Appointment Manager! \'%s\'', session.message.text);
+            builder.Prompts.time(session, "When would you like to schedule your appointment?(e.g.: June 6th at 5pm)");
+        },
+            function (session, results) {
+                session.dialogData.appointmentDate = builder.EntityRecognizer.resolveTime([results.response]);
+                builder.Prompts.text(session, "How many haircuts and for who?");
+            },
+            function (session, results) {
+                session.dialogData.partySize = results.response;
+                builder.Prompts.text(session, "Please leave your name and phone number");
+            },
+            function (session, results) {
+                session.dialogData.appointmentInfo = results.response;
+
+                // Process request and display reservation details
+                session.send(`Appointment confirmed, Details: <br/>Date/Time: ${session.dialogData.appointmentDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.appointmentInfo}`);
+                session.endDialog();
+            }
+]).set('storage', inMemoryStorage); // Register in-memory storage 
+    ).triggerAction({
+    matches: 'manageAppointment'
+})
+
 
     /*    
 // This is the intent get Info - need to work on how to structure hierarchal entities - price and its children
@@ -117,7 +164,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
             if (priceEntity) {
                 builder.Prompts.text(session, session.dialog.prompt);
             } else if () {
-                var order = {
+                var infor = {
                     foodName: foodNameEntity.entity,
                     size: sizeEntity.entity,
                     quantity: quantityEntity.entity
@@ -131,31 +178,6 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 ).triggerAction({
     matches: 'getInformation.Price'
 })
-
-
-
-//Appointment Details - waterfalled for input - Code is correct - need to work on getting functionality with memory - find hhow to test 
-.matches('manageAppointment', function [(session, args, next)] => {
-            session.send('Welcome to the Appointment Manager! \'%s\'', session.message.text);
-        builder.Prompts.time(session, "When would you like to schedule your appointment?(e.g.: June 6th at 5pm)");
-    },
-    function (session, results) {
-        session.dialogData.appointmentDate = builder.EntityRecognizer.resolveTime([results.response]);
-        builder.Prompts.text(session, "How many haircuts and for who?");
-    },
-    function (session, results) {
-        session.dialogData.partySize = results.response;
-        builder.Prompts.text(session, "Please leave your name and phone number");
-    },
-    function (session, results) {
-        session.dialogData.appointmentInfo = results.response;
-
-        // Process request and display reservation details
-        session.send(`Appointment confirmed, Details: <br/>Date/Time: ${session.dialogData.appointmentDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.appointmentInfo}`);
-        session.endDialog();
-    }
-]).set('storage', inMemoryStorage); // Register in-memory storage 
-
 
 
 // Sample dialog from LUIS website - 
@@ -207,7 +229,6 @@ bot.dialog('TurnOnDialog',
 
 
 
-bot.dialog('/', intents);    
 
    
 
