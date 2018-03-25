@@ -52,41 +52,45 @@ var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 bot.recognizer(recognizer);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 
-//Completed/Tested Intents Here 
+    //Completed/Tested Intents Here 
 
-.matches('Greeting', (session) => {
-    session.send('Hi! Im AppointoTron3000, How can I help yoWou?', session.message.text);
-})
-
-
-
-.matches('Goodbye', (session) => {
-    session.send('Thanks for Talking with me Daddy!', session.message.text);
-})
+    .matches('Greeting', (session) => {
+        session.send('Hi! Im AppointoTron3000, How can I help yoWou?', session.message.text);
+    })
 
 
 
-.matches('None', (session) => {
-    session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me' , session.message.text);    
-})
+    .matches('Goodbye', (session) => {
+        session.send('Thanks for Talking with me Daddy!', session.message.text);
+    })
 
 
 
+    .matches('None', (session) => {
+        session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me', session.message.text);
+    })
+
+
+    .matches('getInformation', (session, args) => {
+        session.send('What info wold you like? Price, Timing, or Location', session.message.text);
+    }
+
+        /*
 // This is the intent get Info - need to work on how to structure hierarchal entities - price and its children
     .matches('getInformation', [
         function(session, args, next) {
             session.send('One Moment while I find this information: \'%s\'', session.message.text);
 
             var PriceEntity = builder.EntityRecognizer.findEntity(args.entities, 'Price');
-		var ChildEntity = builder.EntityRecognizer.findEntity(args.entities, 'Child');
-		var MenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Men');
-		var WomenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Women');
+		        var ChildEntity = builder.EntityRecognizer.findEntity(args.entities, 'Child');
+		        var MenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Men');
+		        var WomenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Women');
             var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
             var PhoneNumberEntity = builder.EntityRecognizer.findEntity(args.entities, 'PhoneNumber');
 
             if (priceEntity) {
                 builder.Prompts.text(session, session.dialog.prompt);
-            } else if (foodNameEntity && quantityEntity && sizeEntity) {
+            } else if () {
                 var order = {
                     foodName: foodNameEntity.entity,
                     size: sizeEntity.entity,
