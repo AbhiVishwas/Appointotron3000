@@ -72,10 +72,36 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 
 
     .matches('getInformation', (session, args) => {
-        session.send('What info wold you like? Price, Timing, or Location', session.message.text);
-    }
+        session.send('What info wold you like? Price, Timing, or Contact Info?', session.message.text);
+        var PriceEntity = builder.EntityRecognizer.findEntity(args.entities, 'Price');
+            var ChildEntity = builder.EntityRecognizer.findEntity(args.entities, 'Child');
+            var MenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Men');
+            var WomenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Women');
+        var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
+        var PhoneNumberEntity = builder.EntityRecognizer.findEntity(args.entities, 'PhoneNumber');
+        var TimeOpenEntity = builder.EntityRecognizer.findEntity(args.entities, 'TimeOpen');
 
-        /*
+        if (PriceEntity) {
+            session.send('For a man, woman, or child?', session.message.text); 
+            if (childEntity) {
+                session.send('The price for a Childs haircut is 10$', session.message.text);
+            })
+                if (womensEntity) {
+                    session.send('The price for a Womans haircut is 12$', session.message.text);
+                })
+                    if (mensEntity) {
+                        session.send('The price for a Childs haircut is 10$', session.message.text);
+                    })
+        if (timingEntity) {
+            session.send('We are Open from 6:30 AM to 8:30 PM', session.message.text);
+                    })
+        if (timeOpenEntity) {
+            session.send('The price for a Womans haircut is 12$', session.message.text);
+               
+        })
+  
+
+    /*    
 // This is the intent get Info - need to work on how to structure hierarchal entities - price and its children
     .matches('getInformation', [
         function(session, args, next) {
