@@ -80,7 +80,7 @@ bot.dialog('Help', function (session) => {
 }).triggerAction({
     matches: 'Help'
 });
-
+/*
     .matches('getInformation', (session, args) => {
         session.send('What info wold you like? Price, Timing, or Contact Info?', session.message.text);
         var priceEntity = builder.EntityRecognizer.findEntity(args.entities, 'Price');
