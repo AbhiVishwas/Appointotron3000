@@ -177,7 +177,7 @@ bot.dialog('greetings', [
             ]).set('storage', inMemoryStorage);
                 // Register in-memory storage
     if (cancelAppoitnmentEntity) {
-        session.send('Sure, I canceled you appointment at 730 enjoy your messy hair!', session.message.text);
+        session.send('Sure, I canceled you appointment at' + userInput+  'enjoy your messy hair!', session.message.text);
     }
     if (changeAppoitnmentEntity) {
         session.send('Your Appointment has been moved, see you at' + userTime, session.message.text);
