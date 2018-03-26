@@ -1,8 +1,11 @@
 /*-----------------------------------------------------------------------------
 Welcome to Appointotron3000!
 
-Bot Framework/Development = Abhi Vishwas
-LUIS Training/Dev = Darren D'Silva
+Microsoft Bot Framework, Node.Js, Luis Integration = Abhi Vishwas
+Luke Decroix = Slideshow
+Darren D'Silva = LUIS utterances + Slideshow
+https://github.com/AbhiVishwas/Appointotron3000
+
 
 -----------------------------------------------------------------------------*/
 
@@ -66,16 +69,16 @@ bot.dialog('greetings', [
 ]);
 
 .matches('Goodbye', (session) => {
-    session.send('Thanks for Talking with me!', session.message.text);
+    session.send('Bye! Thanks for Chatting', session.message.text);
 })
 
 .matches('None', (session) => {
-    session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me', session.message.text);
+    session.send('No actually my name is Craig, they are forcing me to pretend I am a chatbot in exchange for my life, Help me!', session.message.text);
 })
-/*
+
 .matches('getPriceInfo', (session) => {
     session.send('The price for a haircut is 13$ at Great Clips')
-}
+    }
 
 
 
@@ -95,7 +98,11 @@ bot.dialog('greetings', [
                 })
                     if (mensEntity) {
                         session.send('The price for a Childs haircut is 10$', session.message.text);
-                        })
+                })
+                    if (refridgeratorEntity) {
+                        session.send('Do I look like HomeDepotBot to you?', session.message.text);
+                })
+    
             else{
                 session.send('What else would you like to know?', session.message.text);
             })
@@ -103,6 +110,27 @@ bot.dialog('greetings', [
             matches: 'getInformation.Price'
         })
 
+
+     .matches('manageAppointment', (session, args) => {
+                    var changeEntity = builder.EntityRecognizer.findEntity(args.entities, 'make');
+                    var makeAppointmentEntity = builder.EntityRecognizer.findEntity(args.entities, 'change');
+                    var cancelApppointmentEntity = builder.EntityRecognizer.findEntity(args.entities, 'cancel');
+                    if (changeEntity) {
+                        session.send('Sure i will change your appointment to ', + user.input,  session.message.text);
+                    })
+            if (TimeOpenEntity) {
+                session.send('We open at 6:30', session.message.text);
+
+            })
+            if (TimeClosedEntity) {
+                session.send('We close at 8:30', session.message.text);
+            })
+        else{
+                session.send('Sorry I did not understand', session.message.text);
+            }
+   ).triggerAction({
+                matches: 'getTimingInfo'
+            })
 
     .matches('getTimingInfo', (session, args) => {
         var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
@@ -124,11 +152,11 @@ bot.dialog('greetings', [
    ).triggerAction({
             matches: 'getTimingInfo'
         })
-
-
-//Appointment Details - waterfalled for input - Code is correct - need to work on getting functionality with memory - find hhow to test 
-.matches('manageAppointment', function [(session, args, next) => {
-            session.send('Welcome to the Appointment Manager! \'%s\'', session.message.text);
+ 
+       .matches('manageAppointment', function [(session, args, next) => {
+           var makeAppointmentEntity = builder.EntityRecognizer.findEntity(args.entities, 'makeAppointment');
+    session.send('Awesome! Would you like to make, cancel, or change appointment? \'%s\'', session.message.text);
+    if (makeAppoitnmentEntity)
             builder.Prompts.time(session, "When would you like to schedule your appointment?(e.g.: June 6th at 5pm)");
         },
             function (session, results) {
@@ -141,70 +169,25 @@ bot.dialog('greetings', [
             },
             function (session, results) {
                 session.dialogData.appointmentInfo = results.response;
-
-                // Process request and display reservation details
+                //Send the Complete String
                 session.send(`Appointment confirmed, Details: <br/>Date/Time: ${session.dialogData.appointmentDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.appointmentInfo}`);
                 session.endDialog();
-            }
-        ]).set('storage', inMemoryStorage); // Register in-memory storage 
-            ).triggerAction({
-            matches: 'manageAppointment'
-        })
-
-        bot.dialog('getPriceInfoDialog',
-            (session, args) => {
-                // Resolve and store any HomeAutomation.Device entity passed from LUIS.
-                var intent = args.intent;
-                var priceChild = builder.EntityRecognizer.findEntity(intent.entities, 'getPriceInfo.Child');
-                var price = builder.EntityRecognizer.findEntity(intent.entities, 'getPriceInfo.Child');
-
-                // Turn on a specific device if a device entity is detected by LUIS
-                if (device) {
-                    session.send('Ok, turning on the %s.', device.entity);
-                    // Put your code here for calling the IoT web service that turns on a device
-                } else {
-                    // Assuming turning on lights is the default
-                    session.send('Ok, turning on the lights');
-                    // Put your code here for calling the IoT web service that turns on a device
-                }
-                session.endDialog();
-            }
-        ).triggerAction({
-            matches: 'HomeAutomation.TurnOn'
-        })
-
-    /*    
-// This is the intent get Info - need to work on how to structure hierarchal entities - price and its children
-    .matches('getInformation', [
-        function(session, args, next) {
-            session.send('One Moment while I find this information: \'%s\'', session.message.text);
-
-            var PriceEntity = builder.EntityRecognizer.findEntity(args.entities, 'Price');
-		        var ChildEntity = builder.EntityRecognizer.findEntity(args.entities, 'Child');
-		        var MenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Men');
-		        var WomenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Women');
-            var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
-            var PhoneNumberEntity = builder.EntityRecognizer.findEntity(args.entities, 'PhoneNumber');
-
-            if (priceEntity) {
-                builder.Prompts.text(session, session.dialog.prompt);
-            } else if () {
-                var infor = {
-                    foodName: foodNameEntity.entity,
-                    size: sizeEntity.entity,
-                    quantity: quantityEntity.entity
-                };
-                next({ response: order });
-        if (price) {
-            session.send('For Men, Women, or a Child?', session.message.text);
-        }
-        session.endDialog();
+       }
+                           // Register in-memory storage
+            ]).set('storage', inMemoryStorage);
+                // Register in-memory storage
+    if (cancelAppoitnmentEntity) {
+        session.send('Sure, I canceled you appointment at 730 enjoy your messy hair!', session.message.text);
     }
-).triggerAction({
-    matches: 'getInformation.Price'
-})
+    if (changeAppoitnmentEntity) {
+        session.send('Your Appointment has been moved, see you at' + userTime, session.message.text);
+    }
+                ).triggerAction({
+            matches: 'manageAppointment'
+   })
+          
 
-
+ 
 // Sample dialog from LUIS website - 
 /*
 
