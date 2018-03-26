@@ -55,31 +55,30 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 
     //Completed/Tested Intents Here 
 
-    intent.matches('Greeting', (session) => {
-        session.send('Hi! Im AppointoTron3000, How can I help yoWou?', session.message.text);
-    })
+bot.dialog('greetings', [
+    function (session) {
+        builder.Prompts.text(session, 'Hi! What is your name?');
+    },
+    function (session, results) {
+        session.endDialog(`Hello ${results.response}!`);
+    }
+]);
+
+.matches('Goodbye', (session) => {
+    session.send('Thanks for Talking with me!', session.message.text);
+})
 
 
 
-    .matches('Goodbye', (session) => {
-        session.send('Thanks for Talking with me!', session.message.text);
-    })
+.matches('None', (session) => {
+    session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me', session.message.text);
+})
+
+.matches('getPriceInfo', (session) => {
+    session.send('The price for a haircut is 13$ at Great Clips')
+}
 
 
-
-    .matches('None', (session) => {
-        session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me', session.message.text);
-    })
-
-        .matches('getPriceInfo', (session) => {
-            session.send('The price for a haircut is 13$ at Great Clips')
-        }
-
-bot.dialog('Help', function (session) => {
-    session.endDialog('Hi! Try asking me things like \'What time do you open?\', \'What offers is great clips running?\' or \'What is the price of a haircut\'', session.message.text);
-}).triggerAction({
-    matches: 'Help'
-});
 /*
     .matches('getInformation', (session, args) => {
         session.send('What info wold you like? Price, Timing, or Contact Info?', session.message.text);
