@@ -20,15 +20,15 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
   
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
-    appId: process.env.MicrosoftAppId,
-    appPassword: process.env.MicrosoftAppPassword,
+    appId: process.env.445dd56b- fa58 - 4995 - b91f - 5ef16d7e0cb5,
+    appPassword: process.env.Ds$60#ZB19a;=zb-,
     openIdMetadata: process.env.BotOpenIdMetadata 
 });
 
 
-// Listen for messages from users 
+var bot = new builder.UniversalBot(connector);
+// Listen for messages from users
 server.post('/api/messages', connector.listen());
-
 
 /*----------------------------------------------------------------------------------------
 * Bot Storage: For SQL if further developed - integration with database rather than bot memeory
@@ -38,8 +38,6 @@ server.post('/api/messages', connector.listen());
 var tableName = 'botdata';
 var azureTableClient = new botbuilder_azure.AzureTableClient(tableName, process.env['AzureWebJobsStorage']);
 var tableStorage = new botbuilder_azure.AzureBotStorage({ gzipData: false }, azureTableClient);
-
-var bot = new builder.UniversalBot(connector);
 bot.set('storage', tableStorage);
 
 var luisAppId = process.env.LuisAppId ||'78f0a5fa-ad4a-4be9-9b16-5277bf1ec1e2' ;
@@ -50,13 +48,21 @@ var luisAPIHostName = process.env.LuisAPIHostName || 'westus.api.cognitive.micro
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 bot.recognizer(recognizer);
-var intents = new builder.IntentDialog({ recognizers: [recognizer] })
-bot.dialog('/', intents);    
+var intents = new builder.IntentDialog({ recognizers: [recognizer] }) 
 
+// Bot introduces itself and says hello upon conversation start
+bot.on('Greeting', function (message) {
+    if (message.membersAdded[0].id === message.address.bot.id) {
+        var reply = new builder.Message()
+            .address(message.address)
+            .text("Hello, Im Appointotron, how can i help you? ?");
+        bot.send(reply);
+    }
+});
 
     //Completed/Tested Intents Here 
 
-    .matches('Greeting', (session) => {
+    intent.matches('Greeting', (session) => {
         session.send('Hi! Im AppointoTron3000, How can I help yoWou?', session.message.text);
     })
 
@@ -107,8 +113,8 @@ bot.dialog('Help', function (session) => {
         })
 
 
-            .matches('getInformation', (session, args) => {
-                var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
+    .matches('getInformation', (session, args) => {
+        var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
         var PhoneNumberEntity = builder.EntityRecognizer.findEntity(args.entities, 'PhoneNumber');
         var TimeOpenEntity = builder.EntityRecognizer.findEntity(args.entities, 'TimeOpen');
         if (timingEntity) {
@@ -121,9 +127,13 @@ bot.dialog('Help', function (session) => {
         if (PhoneNumberEntity) {
             session.send('Our Phone number is 936-787-6986', session.message.text);
         })
+   ).triggerAction({
+            matches: 'getInformation.Price'
+        })
+
 
 //Appointment Details - waterfalled for input - Code is correct - need to work on getting functionality with memory - find hhow to test 
-.matches('manageAppointment', (session, args, next)=> {
+.matches('manageAppointment', function (session, args, next)=> {
             session.send('Welcome to the Appointment Manager! \'%s\'', session.message.text);
             builder.Prompts.time(session, "When would you like to schedule your appointment?(e.g.: June 6th at 5pm)");
         },
@@ -142,10 +152,10 @@ bot.dialog('Help', function (session) => {
                 session.send(`Appointment confirmed, Details: <br/>Date/Time: ${session.dialogData.appointmentDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.appointmentInfo}`);
                 session.endDialog();
             }
-]).set('storage', inMemoryStorage); // Register in-memory storage 
-    ).triggerAction({
-    matches: 'manageAppointment'
-})
+        ]).set('storage', inMemoryStorage); // Register in-memory storage 
+            ).triggerAction({
+            matches: 'manageAppointment'
+        })
 
 
     /*    
