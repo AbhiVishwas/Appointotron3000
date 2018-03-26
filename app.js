@@ -26,9 +26,9 @@ var connector = new builder.ChatConnector({
 });
 
 
-var bot = new builder.UniversalBot(connector);
-// Listen for messages from users
+// Listen for messages from users 
 server.post('/api/messages', connector.listen());
+
 
 /*----------------------------------------------------------------------------------------
 * Bot Storage: For SQL if further developed - integration with database rather than bot memeory
@@ -38,6 +38,8 @@ server.post('/api/messages', connector.listen());
 var tableName = 'botdata';
 var azureTableClient = new botbuilder_azure.AzureTableClient(tableName, process.env['AzureWebJobsStorage']);
 var tableStorage = new botbuilder_azure.AzureBotStorage({ gzipData: false }, azureTableClient);
+
+var bot = new builder.UniversalBot(connector);
 bot.set('storage', tableStorage);
 
 var luisAppId = process.env.LuisAppId ||'78f0a5fa-ad4a-4be9-9b16-5277bf1ec1e2' ;
@@ -50,15 +52,6 @@ var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 bot.recognizer(recognizer);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] }) 
 
-// Bot introduces itself and says hello upon conversation start
-bot.on('Greeting', function (message) {
-    if (message.membersAdded[0].id === message.address.bot.id) {
-        var reply = new builder.Message()
-            .address(message.address)
-            .text("Hello, Im Appointotron, how can i help you? ?");
-        bot.send(reply);
-    }
-});
 
     //Completed/Tested Intents Here 
 
@@ -69,7 +62,7 @@ bot.on('Greeting', function (message) {
 
 
     .matches('Goodbye', (session) => {
-        session.send('Thanks for Talking with me Daddy!', session.message.text);
+        session.send('Thanks for Talking with me!', session.message.text);
     })
 
 
@@ -78,9 +71,9 @@ bot.on('Greeting', function (message) {
         session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me', session.message.text);
     })
 
-        .matches('getInfo', (session) => {
-            session.send('What Info?', session.message.text);
-        })
+        .matches('getPriceInfo', (session) => {
+            session.send('The price for a haircut is 13$ at Great Clips')
+        }
 
 bot.dialog('Help', function (session) => {
     session.endDialog('Hi! Try asking me things like \'What time do you open?\', \'What offers is great clips running?\' or \'What is the price of a haircut\'', session.message.text);
@@ -90,11 +83,11 @@ bot.dialog('Help', function (session) => {
 
     .matches('getInformation', (session, args) => {
         session.send('What info wold you like? Price, Timing, or Contact Info?', session.message.text);
-        var PriceEntity = builder.EntityRecognizer.findEntity(args.entities, 'Price');
-            var ChildEntity = builder.EntityRecognizer.findEntity(args.entities, 'Child');
-            var MenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Men');
-            var WomenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Women');
-        if (PriceEntity) {
+        var priceEntity = builder.EntityRecognizer.findEntity(args.entities, 'Price');
+            var childEntity = builder.EntityRecognizer.findEntity(args.entities, 'Child');
+            var menEntity = builder.EntityRecognizer.findEntity(args.entities, 'Men');
+            var womenEntity = builder.EntityRecognizer.findEntity(args.entities, 'Women');
+        if (priceEntity) {
             session.send('For a man, woman, or child?', session.message.text); 
             if (childEntity) {
                 session.send('The price for a Childs haircut is 10$', session.message.text);
@@ -113,27 +106,30 @@ bot.dialog('Help', function (session) => {
         })
 
 
-    .matches('getInformation', (session, args) => {
+    .matches('getTimingInfo', (session, args) => {
         var TimingEntity = builder.EntityRecognizer.findEntity(args.entities, 'Timing');
-        var PhoneNumberEntity = builder.EntityRecognizer.findEntity(args.entities, 'PhoneNumber');
+        var TimeClosedEntity = builder.EntityRecognizer.findEntity(args.entities, 'TimeClosed');
         var TimeOpenEntity = builder.EntityRecognizer.findEntity(args.entities, 'TimeOpen');
         if (timingEntity) {
             session.send('We are Open from 6:30 AM to 8:30 PM', session.message.text);
         })
-        if (timeOpenEntity) {
+        if (TimeOpenEntity) {
             session.send('We open at 6:30', session.message.text);
 
         })
-        if (PhoneNumberEntity) {
-            session.send('Our Phone number is 936-787-6986', session.message.text);
+        if (TimeClosedEntity) {
+            session.send('We close at 8:30', session.message.text);
         })
+        else{
+            session.send('Sorry I did not understand', session.message.text);
+        }
    ).triggerAction({
-            matches: 'getInformation.Price'
+            matches: 'getTimingInfo'
         })
 
 
 //Appointment Details - waterfalled for input - Code is correct - need to work on getting functionality with memory - find hhow to test 
-.matches('manageAppointment', function (session, args, next)=> {
+.matches('manageAppointment', function [(session, args, next) => {
             session.send('Welcome to the Appointment Manager! \'%s\'', session.message.text);
             builder.Prompts.time(session, "When would you like to schedule your appointment?(e.g.: June 6th at 5pm)");
         },
@@ -157,6 +153,27 @@ bot.dialog('Help', function (session) => {
             matches: 'manageAppointment'
         })
 
+        bot.dialog('getPriceInfoDialog',
+            (session, args) => {
+                // Resolve and store any HomeAutomation.Device entity passed from LUIS.
+                var intent = args.intent;
+                var priceChild = builder.EntityRecognizer.findEntity(intent.entities, 'getPriceInfo.Child');
+                var price = builder.EntityRecognizer.findEntity(intent.entities, 'getPriceInfo.Child');
+
+                // Turn on a specific device if a device entity is detected by LUIS
+                if (device) {
+                    session.send('Ok, turning on the %s.', device.entity);
+                    // Put your code here for calling the IoT web service that turns on a device
+                } else {
+                    // Assuming turning on lights is the default
+                    session.send('Ok, turning on the lights');
+                    // Put your code here for calling the IoT web service that turns on a device
+                }
+                session.endDialog();
+            }
+        ).triggerAction({
+            matches: 'HomeAutomation.TurnOn'
+        })
 
     /*    
 // This is the intent get Info - need to work on how to structure hierarchal entities - price and its children
