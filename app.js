@@ -20,10 +20,11 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
   
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
-    appId: process.env.445dd56b- fa58 - 4995 - b91f - 5ef16d7e0cb5,
-    appPassword: process.env.Ds$60#ZB19a;=zb-,
-    openIdMetadata: process.env.BotOpenIdMetadata 
+    var luisAppId = process.env.LuisAppId;
+    var luisAPIKey = process.env.LuisAPIKey;
+    openIdMetadata: process.env.BotOpenIdMetadata
 });
+
 
 
 // Listen for messages from users 
@@ -68,18 +69,16 @@ bot.dialog('greetings', [
     session.send('Thanks for Talking with me!', session.message.text);
 })
 
-
-
 .matches('None', (session) => {
     session.send('Bro stop sending me this weird stuff, my names Jackson, i get paid minimum wage, its not even a real chatbot, stop texting me', session.message.text);
 })
-
+/*
 .matches('getPriceInfo', (session) => {
     session.send('The price for a haircut is 13$ at Great Clips')
 }
 
 
-/*
+
     .matches('getInformation', (session, args) => {
         session.send('What info wold you like? Price, Timing, or Contact Info?', session.message.text);
         var priceEntity = builder.EntityRecognizer.findEntity(args.entities, 'Price');
